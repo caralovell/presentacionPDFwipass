@@ -8,13 +8,80 @@
     html, body { height: 100%; margin: 0; background: #000; }
     .wrap { position: fixed; inset: 0; }
     iframe { width: 100%; height: 100%; border: 0; }
+
+    /* fallback overlay */
+    .fallback {
+      position: fixed; inset: 0;
+      display: none; align-items: center; justify-content: center;
+      background: #0b0b0b; color: #fff;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      padding: 24px;
+    }
+    .card {
+      width: min(560px, 92vw);
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 18px;
+      padding: 22px;
+      text-align: center;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+    }
+    .btn {
+      display: block;
+      margin-top: 14px;
+      padding: 14px 18px;
+      border-radius: 14px;
+      background: #ff6a00;
+      color: #111;
+      font-weight: 800;
+      text-decoration: none;
+    }
+    .sub { opacity: .8; font-size: 14px; }
   </style>
 </head>
 <body>
   <div class="wrap">
-    <iframe
-      src="https://docs.google.com/gview?embedded=true&url=https://landing-files-pdf.s3.us-east-2.amazonaws.com/53b72b98-d160-4aac-b507-06714bf713e6___presentacionwipass.pdf">
-    </iframe>
+    <iframe id="viewer" loading="eager"></iframe>
   </div>
+
+  <div class="fallback" id="fallback">
+    <div class="card">
+      <h2 style="margin:0 0 8px;">No se pudo cargar el visor</h2>
+      <div class="sub">Ábrelo directamente para verlo perfecto.</div>
+      <a class="btn" target="_blank" rel="noopener" id="openBtn">Abrir PDF</a>
+    </div>
+  </div>
+
+  <script>
+    const PDF_URL = "https://landing-files-pdf.s3.us-east-2.amazonaws.com/53b72b98-d160-4aac-b507-06714bf713e6___presentacionwipass.pdf";
+    const GVIEW_URL = "https://docs.google.com/gview?embedded=true&url=" + encodeURIComponent(PDF_URL);
+
+    const iframe = document.getElementById("viewer");
+    const fallback = document.getElementById("fallback");
+    const openBtn = document.getElementById("openBtn");
+    openBtn.href = PDF_URL;
+
+    // Detectar móvil/tablet (simple y suficiente para tu caso)
+    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || (window.innerWidth <= 900);
+
+    // ✅ Móvil: Google Viewer | ✅ Escritorio: PDF directo
+    iframe.src = isMobile ? GVIEW_URL : PDF_URL;
+
+    // Fallback si el visor no carga (especialmente gview)
+    const timer = setTimeout(() => {
+      // si gview falla o el webview no soporta PDF embebido
+      fallback.style.display = "flex";
+    }, 1800);
+
+    iframe.addEventListener("load", () => {
+      clearTimeout(timer);
+      // OJO: algunos casos "load" dispara aunque se vea mal, pero normalmente ok
+    });
+
+    iframe.addEventListener("error", () => {
+      clearTimeout(timer);
+      fallback.style.display = "flex";
+    });
+  </script>
 </body>
 </html>
